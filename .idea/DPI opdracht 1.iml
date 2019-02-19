@@ -8,12 +8,21 @@
       <sourceFolder url="file://$MODULE_DIR$/application forms/loan broker" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/mix" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="11" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../apache-activemq-5.15.8/activemq-all-5.15.8.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Downloads/genson-1.4.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

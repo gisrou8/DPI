@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
+import Chained.Gateway.LoanBank.BankAppGateway;
 import model.JMSMessaging;
 import model.bank.*;
 import model.loan.LoanReply;
@@ -30,7 +31,7 @@ public class LoanBrokerFrame extends JFrame {
 	private JPanel contentPane;
 	private DefaultListModel<JListLine> listModel = new DefaultListModel<JListLine>();
 	private JList<JListLine> list;
-	private LoanRequest request;
+	private LoanRequest loanRequest;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -52,55 +53,67 @@ public class LoanBrokerFrame extends JFrame {
 	 */
 	public LoanBrokerFrame() {
 
-		try {
-			JMSMessaging jms = new JMSMessaging();
-			MessageConsumer consumer = jms.getConsumer("Loanrequest");
-			consumer.setMessageListener(new MessageListener() {
+//		try {
+//			JMSMessaging jms = new JMSMessaging();
+//			MessageConsumer consumer = jms.getConsumer("Loanrequest");
+//			consumer.setMessageListener(new MessageListener() {
+//
+//				@Override
+//				public void onMessage(Message msg) {
+//					try {
+//						ObjectMessage objectmessage = (ObjectMessage) msg;
+//						request = (LoanRequest) objectmessage.getObject();
+//						BankInterestRequest bankRequest = new BankInterestRequest(request.getAmount(), request.getTime());
+//						add(request);
+//						jms.sendJSMMessage("Bankrequest", bankRequest);
+//					} catch (JMSException e) {
+//						e.printStackTrace();
+//					}
+//
+//
+//				}
+//			});
+//		} catch (JMSException e) {
+//			e.printStackTrace();
+//		}
 
-				@Override
-				public void onMessage(Message msg) {
-					try {
-						ObjectMessage objectmessage = (ObjectMessage) msg;
-						request = (LoanRequest) objectmessage.getObject();
-						BankInterestRequest bankRequest = new BankInterestRequest(request.getAmount(), request.getTime());
-						add(request);
-						jms.sendJSMMessage("Bankrequest", bankRequest);
-					} catch (JMSException e) {
-						e.printStackTrace();
-					}
-
-
-				}
-			});
-		} catch (JMSException e) {
-			e.printStackTrace();
-		}
-
-
-		try {
-			JMSMessaging jms = new JMSMessaging();
-			MessageConsumer bankconsumer = jms.getConsumer("bankreply");
-			bankconsumer.setMessageListener(new MessageListener() {
-
-				@Override
-				public void onMessage(Message msg) {
-					try {
-						ObjectMessage objectmessage = (ObjectMessage) msg;
-						BankInterestReply bankreply = (BankInterestReply) objectmessage.getObject();
-						add(request, bankreply);
-						LoanReply loanreply = new LoanReply(bankreply.getInterest(), bankreply.getQuoteId());
-						jms.sendJMSMessage("loanreply", loanreply);
-						System.out.println("loanreply = "  + loanreply.toString());
-					} catch (JMSException e) {
-						e.printStackTrace();
-					}
+		BankAppGateway bankGateway = new BankAppGateway() {
+			@Override
+			public void onBankReplyArrived(BankInterestReply reply, BankInterestRequest request) {
+				add(loanRequest, reply);
+				add(loanRequest, request);
+				LoanReply loanreply = new LoanReply(reply.getInterest(), reply.getQuoteId());
+				// send with clientgateway
+			}
+		};
 
 
-				}
-			});
-		} catch (JMSException e) {
-			e.printStackTrace();
-		}
+
+
+//		try {
+//			JMSMessaging jms = new JMSMessaging();
+//			MessageConsumer bankconsumer = jms.getConsumer("bankreply");
+//			bankconsumer.setMessageListener(new MessageListener() {
+//
+//				@Override
+//				public void onMessage(Message msg) {
+//					try {
+//						ObjectMessage objectmessage = (ObjectMessage) msg;
+//						BankInterestReply bankreply = (BankInterestReply) objectmessage.getObject();
+//						add(request, bankreply);
+//						LoanReply loanreply = new LoanReply(bankreply.getInterest(), bankreply.getQuoteId());
+//						jms.sendJMSMessage("loanreply", loanreply);
+//						System.out.println("loanreply = "  + loanreply.toString());
+//					} catch (JMSException e) {
+//						e.printStackTrace();
+//					}
+//
+//
+//				}
+//			});
+//		} catch (JMSException e) {
+//			e.printStackTrace();
+//		}
 
 
 		setTitle("Loan Broker");

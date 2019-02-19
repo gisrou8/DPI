@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Properties;
 
+import Chained.Gateway.LoanClient.LoanBrokerAppGateway;
 import model.JMSMessaging;
 import model.bank.BankInterestReply;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -124,30 +125,39 @@ public class LoanClientFrame extends JFrame {
 		contentPane.add(tfTime, gbc_tfTime);
 		tfTime.setColumns(10);
 
-		try {
-			JMSMessaging jms = new JMSMessaging();
-			MessageConsumer bankconsumer = jms.getConsumer("loanreply");
-			bankconsumer.setMessageListener(new MessageListener() {
+		LoanBrokerAppGateway gateway = new LoanBrokerAppGateway() {
+			@Override
+			public void onLoanReplyArrived(LoanRequest request, LoanReply reply) {
+				RequestReply rr = getRequestReply(request);
+				rr.setReply(reply);
+				requestReplyList.repaint();
+			}
+		};
 
-				@Override
-				public void onMessage(Message msg) {
-					try {
-						ObjectMessage objectmessage = (ObjectMessage) msg;
-						LoanReply loanreply = (LoanReply) objectmessage.getObject();
-						RequestReply rr = getRequestReply(request);
-						rr.setReply(loanreply);
-						requestReplyList.repaint();
-
-					} catch (JMSException e) {
-						e.printStackTrace();
-					}
-
-
-				}
-			});
-		} catch (JMSException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			JMSMessaging jms = new JMSMessaging();
+//			MessageConsumer bankconsumer = jms.getConsumer("loanreply");
+//			bankconsumer.setMessageListener(new MessageListener() {
+//
+//				@Override
+//				public void onMessage(Message msg) {
+//					try {
+//						ObjectMessage objectmessage = (ObjectMessage) msg;
+//						LoanReply loanreply = (LoanReply) objectmessage.getObject();
+//						RequestReply rr = getRequestReply(request);
+//						rr.setReply(loanreply);
+//						requestReplyList.repaint();
+//
+//					} catch (JMSException e) {
+//						e.printStackTrace();
+//					}
+//
+//
+//				}
+//			});
+//		} catch (JMSException e) {
+//			e.printStackTrace();
+//		}
 		
 		JButton btnQueue = new JButton("send loan request");
 		btnQueue.addActionListener(new ActionListener() {
@@ -158,8 +168,9 @@ public class LoanClientFrame extends JFrame {
 				
 				request = new LoanRequest(ssn,amount,time);
 				listModel.addElement( new RequestReply<LoanRequest,LoanReply>(request, null));
-				JMSMessaging jms = new JMSMessaging();
-				jms.sendJMSMessage("Loanrequest", request);
+//				JMSMessaging jms = new JMSMessaging();
+//				jms.sendJMSMessage("Loanrequest", request);
+				gateway.applyForLoan(request);
 			}
 		});
 		GridBagConstraints gbc_btnQueue = new GridBagConstraints();

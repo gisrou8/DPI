@@ -17,6 +17,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import Chained.Gateway.LoanBank.LoanBrokerAppGateway;
 import model.JMSMessaging;
 import model.bank.*;
 import messaging.requestreply.RequestReply;
@@ -74,27 +75,34 @@ public class JMSBankFrame extends JFrame {
 		gbc_scrollPane.gridy = 0;
 		contentPane.add(scrollPane, gbc_scrollPane);
 
-		try {
-			JMSMessaging jms = new JMSMessaging();
-			MessageConsumer consumer = jms.getConsumer("Bankrequest");
-			consumer.setMessageListener(new MessageListener() {
-
-				@Override
-				public void onMessage(Message msg) {
-					try {
-						ObjectMessage objectmessage = (ObjectMessage) msg;
-						BankInterestRequest bankrequest = (BankInterestRequest) objectmessage.getObject();
-						listModel.add(0,new RequestReply<>(bankrequest, null));
-					} catch (JMSException e) {
-						e.printStackTrace();
-					}
-					System.out.println("received message: " + msg);
-
-				}
-			});
-		} catch (JMSException e) {
-			e.printStackTrace();
-		}
+		LoanBrokerAppGateway gateway = new LoanBrokerAppGateway() {
+			@Override
+			public void onBankInterestRequestArrived(BankInterestRequest request) {
+				listModel.add(0,new RequestReply<>(request, null));
+			}
+		};
+//
+//		try {
+//			JMSMessaging jms = new JMSMessaging();
+//			MessageConsumer consumer = jms.getConsumer("Bankrequest");
+//			consumer.setMessageListener(new MessageListener() {
+//
+//				@Override
+//				public void onMessage(Message msg) {
+//					try {
+//						ObjectMessage objectmessage = (ObjectMessage) msg;
+//						BankInterestRequest bankrequest = (BankInterestRequest) objectmessage.getObject();
+//						listModel.add(0,new RequestReply<>(bankrequest, null));
+//					} catch (JMSException e) {
+//						e.printStackTrace();
+//					}
+//					System.out.println("received message: " + msg);
+//
+//				}
+//			});
+//		} catch (JMSException e) {
+//			e.printStackTrace();
+//		}
 
 		JList<RequestReply<BankInterestRequest, BankInterestReply>> list = new JList<RequestReply<BankInterestRequest, BankInterestReply>>(listModel);
 		scrollPane.setViewportView(list);
@@ -126,8 +134,9 @@ public class JMSBankFrame extends JFrame {
 				if (rr!= null && reply != null){
 					rr.setReply(reply);
 	                list.repaint();
-	                JMSMessaging jms = new JMSMessaging();
-	                jms.sendJMSMessage("bankreply", reply);
+	                gateway.sendReply(reply);
+//	                JMSMessaging jms = new JMSMessaging();
+//	                jms.sendJMSMessage("bankreply", reply);
 					// todo: sent JMS message with the reply to Loan Broker
 				}
 			}
